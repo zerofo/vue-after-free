@@ -2,19 +2,29 @@
 """Send inject.js to PS4 for execution"""
 import asyncio
 import pathlib
-
-IP = "192.168.1.6"
-
+import argparse
 import aioconsole
 import websockets
 
-PORT = "40404"
+
+parser = argparse.ArgumentParser(description="WebSocket client for JSMAF")
+parser.add_argument("ip", help="IP address of the PS4")
+parser.add_argument(
+    "-p", "--port", type=int, default=40404, help="Port number (default: 42069)"
+)
+
+
+args = parser.parse_args()
+IP = args.ip
+PORT = args.port
+
+
 DELAY = 2
 
 retry = True
 
 
-async def send_file(ws: websockets.WebSocketClientProtocol, file_path: str):
+async def send_file(ws: websockets.ClientConnection, file_path: str):
     try:
         path = pathlib.Path(file_path)
         if not path.is_file():
@@ -29,8 +39,8 @@ async def send_file(ws: websockets.WebSocketClientProtocol, file_path: str):
         print(f"[!] Failed to send file: {e}")
 
 
-async def command(ws: websockets.WebSocketClientProtocol):
-    while ws.open:
+async def command(ws: websockets.ClientConnection):
+    while ws.state == websockets.protocol.State.OPEN:
         cmd = await aioconsole.ainput()
         parts = cmd.split(maxsplit=1)
 
@@ -46,15 +56,11 @@ async def command(ws: websockets.WebSocketClientProtocol):
             print("[*] Unknown command. Use: send <path-to-file>")
 
 
-async def receiver(ws: websockets.WebSocketClientProtocol):
+async def receiver(ws: websockets.ClientConnection):
     try:
-        while ws.open:
-            try:
-                data = await asyncio.wait_for(ws.recv(), timeout=DELAY)
-                if isinstance(data, str):
-                    print(data)
-            except asyncio.TimeoutError:
-                pass
+        async for data in ws:
+            if isinstance(data, str):
+                print(data)
     except Exception as e:
         print(f"[!] {e}")
 
@@ -62,9 +68,11 @@ async def receiver(ws: websockets.WebSocketClientProtocol):
 async def main():
     while retry:
         ws = None
+        receiver_task = None
+        command_task = None
         try:
             print(f"[*] Connecting to {IP}:{PORT}...")
-            async with websockets.connect(f"ws://{IP}:{PORT}") as ws:
+            async with websockets.connect(f"ws://{IP}:{PORT}", ping_timeout=None) as ws:
                 print(f"[*] Connected to {IP}:{PORT} !!")
                 receiver_task = asyncio.create_task(receiver(ws))
                 command_task = asyncio.create_task(command(ws))
@@ -78,7 +86,11 @@ async def main():
             print(f"[*] Retrying in {DELAY} seconds...")
             await asyncio.sleep(DELAY)
         finally:
-            if hasattr(ws, "closed") and not ws.closed:
+            if receiver_task is not None:
+                receiver_task.cancel()
+            if command_task is not None:
+                command_task.cancel()
+            if ws is not None and ws.state != websockets.protocol.State.CLOSED:
                 await ws.close()
 
 
