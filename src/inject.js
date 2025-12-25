@@ -315,7 +315,7 @@ while (true) {
 	for (var i = 0; i < 0x100; i++)
 	{
 	    prim_spray[i] = new Array(0x10);
-		prim_spray[i][0] = 13.37;
+		   prim_spray[i][0] = 13.37;
 		prim_spray[i].fill({}, 1);
 
 		prim_spray[i].p0 = prop.d();
