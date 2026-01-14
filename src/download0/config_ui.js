@@ -237,6 +237,27 @@
         } else if (currentButton < configOptions.length) {
             var key = configOptions[currentButton].key;
             currentConfig[key] = !currentConfig[key];
+
+            if (key === 'autolapse' && currentConfig[key] === true) {
+                currentConfig.autopoop = false;
+                for (var i = 0; i < configOptions.length; i++) {
+                    if (configOptions[i].key === 'autopoop') {
+                        updateValueText(i);
+                        break;
+                    }
+                }
+                log("autopoop disabled (autolapse enabled)");
+            } else if (key === 'autopoop' && currentConfig[key] === true) {
+                currentConfig.autolapse = false;
+                for (var i = 0; i < configOptions.length; i++) {
+                    if (configOptions[i].key === 'autolapse') {
+                        updateValueText(i);
+                        break;
+                    }
+                }
+                log("autolapse disabled (autopoop enabled)");
+            }
+
             log(key + " = " + currentConfig[key]);
             updateValueText(currentButton);
             saveConfig();
