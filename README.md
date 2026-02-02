@@ -122,7 +122,7 @@ This elf file is automatically loaded when the lapse kernel exploit has executed
 # Credits
 
 - [c0w-ar](https://github.com/c0w-ar/) — Lapse and NetCtrl porting  , Reverse Engineering
-- [earthonion](https://github.com/earthonion) — UI, initial JS injection, Payload host,Netcontrol porting, binloader, Reverse engineering
+- [earthonion](https://github.com/earthonion) — UI, initial JS injection, Payload host, Netctrl porting, binloader, Reverse engineering
 - [ufm42](https://github.com/ufm42) — Userland Exploit and reverse engineering
 - [D-Link Turtle](https://github.com/iMrDJAi) — General support for userland exploition  
 - [Gezine](https://github.com/gezine) — Local JS method and PSN bypass research  
