@@ -36,7 +36,7 @@ Q: I ran Vue and my console shutdown what do i do? A: If a kernel panic occured 
 Q: How can I run a payload? A: Closing and Reopening Vue is required between payload runs. Select the payload from the UI. 
 
 ## Requirments
-  * Firmware 9.00 or above. 
+  * Firmware 7.00 or above. 
 
 ### For Jailbroken PS4
   * Fake or legit activated PS4 user account.
