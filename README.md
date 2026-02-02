@@ -114,6 +114,7 @@ np-fake-signin-ps4-user.elf should be used for any other fake activated user acc
 The ftp-server.ts payload gives you sandbox FTP to quickly swap exploit or cosmetic files without running a kernel exploit/jailbreaking.
 
 ## WebUI
+Example code for how you can run userland code with webkit as the ui. (possible alternative to jsmaf)
 
 ## ELFLDR
 elfldr.elf is used to load elf and bin payloads post exploit when HEN or GoldHEN have not been loaded. 
