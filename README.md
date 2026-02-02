@@ -119,18 +119,19 @@ elfldr.elf is used to load elf and bin payloads post exploit when HEN or GoldHEN
 ## AIOFIX 
 This elf file is automatically loaded when the lapse kernel exploit has executed successfully it fixes issues in some games. It is not needed for poopsploit/netctrl.
 
-# Credits 
-- [c0w-ar](https://github.com/c0w-ar/)
-- [earthonion](https://github.com/earthonion)
-- [ufm42](https://github.com/ufm42)
-- [D-Link Turtle](https://github.com/iMrDJAi) 
-- [Gezine](https://github.com/gezine)
-- [Helloyunho](https://github.com/Helloyunho)
-- [Dr.Yenyen](https://github.com/DrYenyen)
-- [AlAzif](https://github.com/Al-Azif) Reference for exploit table and retail application advice.
-- abc
-- [TheFlow](https://github.com/TheOfficialFloW)
-- [Lua Loader project](https://github.com/shahrilnet/remote_lua_loader)
+# Credits
+
+- [c0w-ar](https://github.com/c0w-ar/) — Lapse and NetCtrl porting  , Reverse Engineering
+- [earthonion](https://github.com/earthonion) — UI, initial JS injection, Payload host,Netcontrol porting, binloader, Reverse engineering
+- [ufm42](https://github.com/ufm42) — Userland Exploit and reverse engineering
+- [D-Link Turtle](https://github.com/iMrDJAi) — General support for userland exploition  
+- [Gezine](https://github.com/gezine) — Local JS method and PSN bypass research  
+- [Helloyunho](https://github.com/Helloyunho) — TypeScript port  , Reverse Engineering
+- [Dr.Yenyen](https://github.com/DrYenyen) — Extensive testing, quality control, and end‑user support/ideas  
+- [AlAzif](https://github.com/Al-Azif) — Reference for exploit table and retail application advice  
+- abc — Lapse  
+- [TheFlow](https://github.com/TheOfficialFloW) — NetCtrl  
+- [Lua Loader project](https://github.com/shahrilnet/remote_lua_loader) — Remote Lua loader foundation
 
 ## payload sources:
 - [elfldr.elf](https://github.com/ps4-payload-dev/elfldr) by John Törnblom 
