@@ -179,23 +179,43 @@ if (!is_jailbroken) {
     const total_wait = ((Date.now() - start_time) / 1000).toFixed(1)
     log('Exploit completed successfully after ' + total_wait + ' seconds')
   }
+  // Only run binloader for lapse - netctrl handles its own
+  if (use_lapse) {
+    log('Initializing binloader...')
+
+    try {
+      binloader_init()
+      log('Binloader initialized and running!')
+      log('Starting AIO FIX...')
+    } catch (e) {
+      log('ERROR: Failed to initialize binloader')
+      log('Error message: ' + (e as Error).message)
+      log('Error name: ' + (e as Error).name)
+      if ((e as Error).stack) {
+        log('Stack trace: ' + (e as Error).stack)
+      }
+      throw e
+    }
+  }
 } else {
   utils.notify('Already Jailbroken!')
   include('main-menu.js')
 }
 
-log('Initializing binloader...')
+export function run_binloader () {
+  log('Initializing binloader...')
 
-try {
-  binloader_init()
-  log('Binloader initialized and running!')
-  log('Starting AIO FIX...')
-} catch (e) {
-  log('ERROR: Failed to initialize binloader')
-  log('Error message: ' + (e as Error).message)
-  log('Error name: ' + (e as Error).name)
-  if ((e as Error).stack) {
-    log('Stack trace: ' + (e as Error).stack)
+  try {
+    binloader_init()
+    log('Binloader initialized and running!')
+    log('Starting AIO FIX...')
+  } catch (e) {
+    log('ERROR: Failed to initialize binloader')
+    log('Error message: ' + (e as Error).message)
+    log('Error name: ' + (e as Error).name)
+    if ((e as Error).stack) {
+      log('Stack trace: ' + (e as Error).stack)
+    }
+    throw e
   }
-  throw e
 }

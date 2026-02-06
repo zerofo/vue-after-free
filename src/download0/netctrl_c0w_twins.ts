@@ -1,6 +1,7 @@
 import { fn, syscalls, BigInt, utils, gadgets } from 'download0/types'
 import { libc_addr } from 'download0/userland'
 import { get_fwversion, hex, malloc, read16, read32, read64, send_notification, write16, write32, write64, write8, get_kernel_offset, kernel, jailbreak_shared, read8 } from 'download0/kernel'
+import { show_success, run_binloader } from 'download0/loader'
 
 // include('userland.js')
 include('kernel.js')
@@ -1122,6 +1123,9 @@ function jailbreak () {
 
   log('Jailbreak Complete - JAILBROKEN')
   utils.notify('The Vue-after-Free team congratulates you\nNetCtrl Finished OK\nEnjoy freedom')
+
+  show_success()
+  run_binloader()
 }
 
 function fhold (fp: BigInt) {
