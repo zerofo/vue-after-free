@@ -36,7 +36,10 @@ import { utils } from 'download0/types'
 
     var bg = new Image({
       url: 'file:///../download0/img/multiview_bg_VAF.png',
-      x: 0, y: 0, width: 1920, height: 1080
+      x: 0,
+      y: 0,
+      width: 1920,
+      height: 1080
     })
     jsmaf.root.children.push(bg)
 
@@ -60,14 +63,20 @@ import { utils } from 'download0/types'
 
     progressBg = new Image({
       url: 'file:///assets/img/button_over_9.png',
-      x: barX, y: barY, width: barW, height: barH
+      x: barX,
+      y: barY,
+      width: barW,
+      height: barH
     })
     progressBg.alpha = 0.3
     jsmaf.root.children.push(progressBg)
 
     progressFg = new Image({
       url: 'file:///assets/img/button_over_9.png',
-      x: barX, y: barY, width: 0, height: barH
+      x: barX,
+      y: barY,
+      width: 0,
+      height: barH
     })
     progressFg.alpha = 1.0
     jsmaf.root.children.push(progressFg)
